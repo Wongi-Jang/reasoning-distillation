@@ -1,0 +1,46 @@
+# Interactive A100-80GB shell for reasoning-distillation (sommelier cluster, namespace ws-rs4qvndqewwb1).
+#   kubectl apply -f k8s/gpu-shell.yaml && kubectl get pods -w
+#   kubectl exec -it rd -- /bin/bash
+# /app   = persistent-volume PVC (code + data + runs; survives pod deletion)
+# /cache = cache PVC (HF models/datasets, uv; re-downloadable)
+# Both PVCs are openebs-hostpath volumes on node `ferrari`, so the pod lands there regardless.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rd
+spec:
+  terminationGracePeriodSeconds: 1
+  restartPolicy: Never
+  nodeSelector:
+    nvidia.com/gpu.product: NVIDIA-A100-SXM4-80GB
+  containers:
+    - name: app
+      image: pytorch/pytorch:2.6.0-cuda12.6-cudnn9-runtime
+      command: ["/bin/bash", "-c", "apt-get update -qq && apt-get install -y -qq gcc >/dev/null; pip install --root-user-action=ignore uv; sleep infinity"]  # gcc: Triton/torch.compile in vLLM
+      workingDir: /app/reasoning-distillation
+      env:
+        - name: HF_HOME
+          value: /cache/hf
+        - name: UV_CACHE_DIR
+          value: /cache/uv
+        - name: UV_PYTHON_INSTALL_DIR
+          value: /cache/uv-python
+        - name: UV_PROJECT_ENVIRONMENT # venv on /cache, same volume as uv cache -> hardlinks, no 8GB copy on /app
+          value: /cache/venv-rd
+        - name: XDG_CACHE_HOME
+          value: /cache/xdg
+      volumeMounts:
+        - name: my-data
+          mountPath: /app
+        - name: cache
+          mountPath: /cache
+      resources:
+        limits:
+          nvidia.com/gpu: 1
+  volumes:
+    - name: my-data
+      persistentVolumeClaim:
+        claimName: persistent-volume
+    - name: cache
+      persistentVolumeClaim:
+        claimName: cache
