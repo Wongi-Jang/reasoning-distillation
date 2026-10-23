@@ -102,11 +102,14 @@ def main():
     logs = {p.parent.name: read_jsonl(p) for p in sorted(Path("runs").glob("E*/train_log.jsonl"))}
     if logs:
         fig, ax = plt.subplots(figsize=(8, 4.5))
-        for color, (run, log) in zip(SERIES, logs.items()):
+        # E6c is E6's size-matched control: same color, dashed, instead of a 7th hue
+        colors = dict(zip([r for r in logs if not r.startswith("E6c")], SERIES))
+        for run, log in logs.items():
+            color = colors["E6_difficulty"] if run.startswith("E6c") else colors[run]
             per_epoch = len(log) / (log[-1]["epoch"] + 1)
             x = [r["step"] / per_epoch for r in log]
             y = [statistics.mean(r["loss"] for r in log[max(0, i - 9): i + 1]) for i in range(len(log))]
-            ax.plot(x, y, color=color, linewidth=2, label=run)
+            ax.plot(x, y, color=color, linewidth=2, label=run, linestyle="--" if run.startswith("E6c") else "-")
         ax.set_yscale("log")
         ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0.2, 0.3, 0.5, 1, 2, 4]))
         ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%.2g"))

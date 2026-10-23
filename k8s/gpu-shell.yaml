@@ -1,4 +1,4 @@
-# Interactive A100-80GB shell for reasoning-distillation (sommelier cluster, namespace ws-rs4qvndqewwb1).
+# Interactive A100-80GB shell for reasoning-distillation (zest cluster, namespace ws-rs4qvndqewwb1).
 #   kubectl apply -f k8s/gpu-shell.yaml && kubectl get pods -w
 #   kubectl exec -it rd -- /bin/bash
 # /app   = persistent-volume PVC (code + data + runs; survives pod deletion)

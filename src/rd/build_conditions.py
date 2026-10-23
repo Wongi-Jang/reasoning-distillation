@@ -30,6 +30,7 @@ def main():
         "E5_long": C.longest(teacher),
         "E6_difficulty": C.difficulty_aware(teacher, student),
     }
+    sets["E6c_random"] = C.random_matched(teacher, len(sets["E6_difficulty"]))  # E6's size-matched control
     tok = AutoTokenizer.from_pretrained(STUDENT)
     print(f"{'condition':16} {'n':>6} {'mean tok':>9} {'median':>7} {f'>{MAX_LEN}':>6}")
     for name, rows in sets.items():

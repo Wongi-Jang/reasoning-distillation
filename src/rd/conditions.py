@@ -15,11 +15,11 @@ def _correct(row):
     return [i for i, (c, f) in enumerate(zip(row["correct"],row["finish"])) if c and f == "stop"]
 
 def answer_only(teacher):
-    """(problem, gold answer)"""
+    """E1: (problem, gold answer)"""
     return [{"id": r["id"], "problem":r["problem"],"response":f"\\boxed{{{r['answer']}}}"} for r in teacher]
 
 def full(teacher, seed=0):
-    """One random finished trace per problem"""
+    """E2: One random finished trace per problem"""
     rng=random.Random(seed)
     out=[]
     for r in teacher:
@@ -30,20 +30,24 @@ def full(teacher, seed=0):
     return out
 
 def verified(teacher, seed=0):
-    """One random correct trace per problem the teacher solved."""
+    """E3: One random correct trace per problem the teacher solved."""
     rng=random.Random(seed)
     return [_example(r, rng.choice(idx)) for r in teacher if (idx:=_correct(r))]
 
 def shortest(teacher):
-    """Shortest correct trace per problem"""
+    """E4: Shortest correct trace per problem"""
     return [_example(r, min(idx, key=lambda i:r["n_tokens"][i])) for r in teacher if (idx:=_correct(r))]
 
 def longest(teacher):
-    """Longest correct trace per problem"""
+    """E5: Longest correct trace per problem"""
     return [_example(r, max(idx, key=lambda i:r["n_tokens"][i])) for r in teacher if (idx:=_correct(r))]
 
 def difficulty_aware(teacher, student, seed=0):
-    """Restricted to problems the student finds medium/hard"""
+    """E6: Restricted to problems the student finds medium/hard"""
     stu={r["id"]:r["correct"] for r in student}
     keep={r["id"] for r in teacher if difficulty(stu[r["id"]],r["correct"]) in ("medium","hard")}
     return [ex for ex in verified(teacher, seed) if ex["id"] in keep]
+
+def random_matched(teacher, n, seed=0):
+    """E6c: Size-matched control for E6"""
+    return random.Random(seed).sample(verified(teacher,seed),n)

@@ -11,7 +11,7 @@ data/
 
 # checkpoints/tokenizers stay on the pod volume; keep only the train logs (used by rd.report)
 runs/*/*
-!runs/*/train_log.jsonl
+!runs/*/*log*.jsonl
 
 # scratch notebook
 view.ipynb
